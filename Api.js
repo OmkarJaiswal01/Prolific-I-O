@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // Import fs module
 require('dotenv').config();
 
 const app = express();
@@ -13,19 +12,17 @@ const SignUpModel = require(path.resolve(__dirname, '../Backend/Model/SignUpMode
 const BoardingModel = require(path.resolve(__dirname, '../Backend/Model/BoardingModel'));
 const CformModel = require(path.resolve(__dirname, '../Backend/Model/CformModel'));
 const FormDataModel = require(path.resolve(__dirname, '../Backend/Model/FormDataModel'));
-const UnverifiedUser = require(path.resolve(__dirname, '../Backend/Model/UnverifiedUser'));
 const PitchUsModel = require(path.resolve(__dirname, '../Backend/Model/PitchUsModel'));
-const SpackWithSalesModel = require(path.resolve(__dirname, '../Backend/Model/SpeakWithSalesModel'));
 
 app.use(express.json());
 app.use(cors());
-app.use(express.static("details"));
+app.use(express.static(path.join(__dirname, '../details'))); // Use path.join for better compatibility
 
-mongoose.connect(process.env.MONGO_URL)
+mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Database is connected'))
-  .catch((err) => console.log('Database is not connected', err));
+  .catch((err) => console.log('Database connection error:', err));
 
-const port = process.env.PORT || 5000; // Fallback to 5000 if PORT is not set
+const port = process.env.PORT || 5000;
 
 app.post('/SignUp', async (req, res) => {
   const { email, pass, aws } = req.body;
@@ -49,7 +46,7 @@ app.post('/SignUp', async (req, res) => {
     res.json({ message: 'User registered successfully' });
   } catch (err) {
     console.error('Error in /SignUp:', err);
-    res.status(500).json({ message: 'Error saving data', error: err });
+    res.status(500).json({ message: 'Error saving data', error: err.message });
   }
 });
 
@@ -75,7 +72,7 @@ app.post('/SignIn', async (req, res) => {
     }
   } catch (err) {
     console.error('Error in /SignIn:', err);
-    res.status(500).json({ message: 'Error signing in', error: err });
+    res.status(500).json({ message: 'Error signing in', error: err.message });
   }
 });
 
@@ -86,12 +83,13 @@ app.post("/Boarding", async (req, res) => {
     email: req.body.email,
     phone: req.body.phone
   });
+
   try {
     await newBoarding.save({ validateBeforeSave: false });
     res.json({ message: "OnBoarding data Saved" });
   } catch (err) {
     console.error('Error in /Boarding:', err);
-    res.status(500).json({ message: "Error saving data", error: err });
+    res.status(500).json({ message: "Error saving data", error: err.message });
   }
 });
 
@@ -113,15 +111,15 @@ app.post("/ChatBot", async (req, res) => {
     await dataModel.save();
     res.json({ message: "Data Saved" });
   } catch (err) {
-    console.error('Error in /Cform:', err);
-    res.status(500).json({ message: "Error saving data", error: err });
+    console.error('Error in /ChatBot:', err);
+    res.status(500).json({ message: "Error saving data", error: err.message });
   }
 });
 
 // Set up Multer for file storage
 const catstorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './details');
+    cb(null, path.join(__dirname, '../details')); // Use path.join for better compatibility
   },
   filename: (req, file, cb) => {
     const ext = file.mimetype.split('/')[1];
@@ -131,7 +129,7 @@ const catstorage = multer.diskStorage({
 
 const catfilter = (req, file, cb) => {
   const ext = file.mimetype.split('/')[1];
-  if (ext === 'jpg' || ext === 'png' || ext === 'jpeg' || ext === 'gif') {
+  if (['jpg', 'png', 'jpeg', 'gif'].includes(ext)) {
     cb(null, true);
   } else {
     cb(new Error('Invalid Pic'), false);
@@ -206,8 +204,8 @@ app.post("/ContactUS", async (req, res) => {
     await newForm.save();
     res.status(201).json({ message: "Data Saved.." });
   } catch (err) {
-    console.error('Error in /PitchUs:', err);
-    res.status(500).json({ message: "Error saving data", error: err });
+    console.error('Error in /ContactUS:', err);
+    res.status(500).json({ message: "Error saving data", error: err.message });
   }
 });
 
