@@ -4,16 +4,18 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs'); // Import fs module
-require('dotenv').config()
+require('dotenv').config();
+
 const app = express();
 
-const SignUpModel = require('../Backend/Model/SignUpModel');
-const BoardingModel = require('../Backend/Model/BoardingModel');
-const CformModel = require('../Backend/Model/CformModel');
-const FormDataModel = require('../Backend/Model/FormDataModel');
-const UnverifiedUser = require('../Backend/Model/UnverifiedUser'); // Adjust path as needed
-const PitchUsModel = require('../Backend/Model/PitchUsModel');
-const SpackWithSalesModel = require('../Backend/Model/SpeakWithSalesModel');
+// Use absolute paths to avoid deployment issues
+const SignUpModel = require(path.resolve(__dirname, '../Backend/Model/SignUpModel'));
+const BoardingModel = require(path.resolve(__dirname, '../Backend/Model/BoardingModel'));
+const CformModel = require(path.resolve(__dirname, '../Backend/Model/CformModel'));
+const FormDataModel = require(path.resolve(__dirname, '../Backend/Model/FormDataModel'));
+const UnverifiedUser = require(path.resolve(__dirname, '../Backend/Model/UnverifiedUser'));
+const PitchUsModel = require(path.resolve(__dirname, '../Backend/Model/PitchUsModel'));
+const SpackWithSalesModel = require(path.resolve(__dirname, '../Backend/Model/SpeakWithSalesModel'));
 
 app.use(express.json());
 app.use(cors());
@@ -23,7 +25,7 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Database is connected'))
   .catch((err) => console.log('Database is not connected', err));
 
-  const port=process.env.PORT;
+const port = process.env.PORT || 5000; // Fallback to 5000 if PORT is not set
 
 app.post('/SignUp', async (req, res) => {
   const { email, pass, aws } = req.body;
@@ -116,9 +118,6 @@ app.post("/ChatBot", async (req, res) => {
   }
 });
 
-
-
-
 // Set up Multer for file storage
 const catstorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -183,7 +182,6 @@ app.post('/Form', UploadCatImg.single('dpic'), async (req, res) => {
     Total_EBS_Volume_Size,
     VPC_CIDR,
     dpic: req.file ? req.file.path : null // Save file path if available
-    
   });
 
   try {
@@ -194,10 +192,6 @@ app.post('/Form', UploadCatImg.single('dpic'), async (req, res) => {
     res.status(500).json({ message: 'Error saving data', error: err.message });
   }
 });
-
-
-
-
 
 app.post("/ContactUS", async (req, res) => {
   const {
@@ -217,13 +211,6 @@ app.post("/ContactUS", async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
 app.post("/upload", UploadCatImg.single("dpic"), (req, res) => {
   console.log(req.body);
   console.log(req.file);
@@ -232,5 +219,5 @@ app.post("/upload", UploadCatImg.single("dpic"), (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log('Server started on port 5000');
+  console.log(`Server started on port ${port}`);
 });
